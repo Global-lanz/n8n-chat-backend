@@ -49,6 +49,3 @@ jobs:
           context: .
           push: true
           tags: ${{ env.IMAGE_NAME }}:${{ env.VERSION }}
-
-      - name: Update dependency graph
-        uses: advanced-security/npm-dependency-submission-action@v1
