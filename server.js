@@ -12,11 +12,13 @@ const VERSION = require('./package.json').version;
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
-  cors: { origin: '*' }
+  cors: { origin: allowedOrigins }
 });
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : ['http://localhost:3000', 'http://localhost:3001'];
+
 app.use(cors({
-  origin: true, // Permite qualquer origem, mas reflete a origem da requisição
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(express.json());
