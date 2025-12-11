@@ -9,16 +9,17 @@ const socketIo = require('socket.io');
 
 const VERSION = require('./package.json').version;
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : ['http://localhost:3000', 'http://localhost:3001'];
+
+const corsOptions = allowedOrigins.includes('*') ? { origin: '*', credentials: true } : { origin: allowedOrigins, credentials: true };
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
-  cors: { origin: '*' }
+  cors: allowedOrigins.includes('*') ? { origin: '*' } : { origin: allowedOrigins }
 });
 
-app.use(cors({
-  origin: true, // Permite qualquer origem, mas reflete a origem da requisição
-  credentials: true
-}));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Conectar ao PostgreSQL
