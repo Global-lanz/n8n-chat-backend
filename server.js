@@ -7,6 +7,8 @@ const axios = require('axios');
 const http = require('http');
 const socketIo = require('socket.io');
 
+const VERSION = require('./package.json').version;
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -274,7 +276,7 @@ app.put('/api/user/username', auth, async (req, res) => {
 
 // Rota para obter versão
 app.get('/api/version', (req, res) => {
-  res.json({ version: '0.0.1' });
+  res.json({ version: VERSION });
 });
 
 // Health check
