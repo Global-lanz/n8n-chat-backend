@@ -238,6 +238,18 @@ app.post('/api/webhook/response', async (req, res) => {
   }
 });
 
+// Rota para obter informações do usuário atual
+app.get('/api/user/me', auth, async (req, res) => {
+  try {
+    res.json({ 
+      user: { id: req.user.id, username: req.user.username, email: req.user.email } 
+    });
+  } catch (error) {
+    console.error('Erro ao obter usuário:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Rota para atualizar nome de usuário
 app.put('/api/user/username', auth, async (req, res) => {
   try {

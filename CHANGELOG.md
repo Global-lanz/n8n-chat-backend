@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Health check endpoint
 - CORS configuration via environment variables
 - new environment variable: ALLOWED_ORIGINS
+- Endpoint to get current user information (/api/user/me)
 
 ### Changed
 - Updated CORS to use ALLOWED_ORIGINS environment variable
