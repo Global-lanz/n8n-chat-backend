@@ -9,16 +9,17 @@ const socketIo = require('socket.io');
 
 const VERSION = require('./package.json').version;
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : ['http://localhost:3000', 'http://localhost:3001'];
+
+const corsOptions = allowedOrigins.includes('*') ? { origin: '*', credentials: true } : { origin: allowedOrigins, credentials: true };
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
-  cors: { origin: '*' }
+  cors: allowedOrigins.includes('*') ? { origin: '*' } : { origin: allowedOrigins }
 });
 
-app.use(cors({
-  origin: true, // Permite qualquer origem, mas reflete a origem da requisição
-  credentials: true
-}));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Conectar ao PostgreSQL
@@ -234,6 +235,18 @@ app.post('/api/webhook/response', async (req, res) => {
   } catch (error) {
     console.error('Erro no webhook:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Rota para obter informações do usuário atual
+app.get('/api/user/me', auth, async (req, res) => {
+  try {
+    res.json({ 
+      user: { id: req.user.id, username: req.user.username, email: req.user.email } 
+    });
+  } catch (error) {
+    console.error('Erro ao obter usuário:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
