@@ -6,17 +6,23 @@ const bcrypt = require('bcryptjs');
 const axios = require('axios');
 const http = require('http');
 const socketIo = require('socket.io');
+const fs = require('fs');
+const path = require('path');
 
 const VERSION = require('./package.json').version;
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : ['http://localhost:3000', 'http://localhost:3001'];
 
-const corsOptions = allowedOrigins.includes('*') ? { origin: '*', credentials: true } : { origin: allowedOrigins, credentials: true };
+const corsOptions = allowedOrigins.includes('*') 
+  ? { origin: '*' } 
+  : { origin: allowedOrigins, credentials: true };
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
-  cors: allowedOrigins.includes('*') ? { origin: '*' } : { origin: allowedOrigins }
+  cors: allowedOrigins.includes('*') 
+    ? { origin: '*' } 
+    : { origin: allowedOrigins, credentials: true }
 });
 
 app.use(cors(corsOptions));
@@ -27,83 +33,76 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-// Verificar e criar estrutura básica do banco de dados
-// NOTA: Para adicionar novas funcionalidades, use migrations em /backend/migrations/
-const initDatabase = async () => {
+// Sistema de Migrations Automático (estilo Flyway)
+const MIGRATIONS = [
+  { version: 'v0.0.3', file: 'v0.0.3_initial_schema.sql', description: 'Schema inicial' },
+  { version: 'v0.1.0', file: 'v0.1.0_admin_system.sql', description: 'Sistema de administração' },
+];
+
+async function runMigrations() {
   try {
+    console.log('🔄 Verificando migrations...');
+
     // Criar tabela de controle de migrations
     await pool.query(`
       CREATE TABLE IF NOT EXISTS migrations (
         id SERIAL PRIMARY KEY,
         version VARCHAR(50) UNIQUE NOT NULL,
+        description TEXT,
         applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    // Verificar versão atual do banco
-    const versionCheck = await pool.query(`
-      SELECT version FROM migrations ORDER BY applied_at DESC LIMIT 1
-    `);
-    const currentVersion = versionCheck.rows[0]?.version || 'none';
+    // Verificar quais migrations já foram aplicadas
+    const result = await pool.query('SELECT version FROM migrations ORDER BY applied_at');
+    const appliedMigrations = result.rows.map(row => row.version);
 
-    // Criar tabela users (estrutura completa para compatibilidade)
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(255) UNIQUE NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        is_admin BOOLEAN DEFAULT FALSE,
-        license_expires_at TIMESTAMP,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // Auto-migration: Adicionar colunas faltantes (apenas se necessário)
-    await pool.query(`
-      DO $$ 
-      BEGIN
-        -- Adicionar is_admin se não existir
-        IF NOT EXISTS (
-          SELECT 1 FROM information_schema.columns 
-          WHERE table_name = 'users' AND column_name = 'is_admin'
-        ) THEN
-          ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE;
-          RAISE NOTICE '✅ Coluna is_admin adicionada automaticamente';
-        END IF;
+    // Executar migrations pendentes
+    for (const migration of MIGRATIONS) {
+      if (!appliedMigrations.includes(migration.version)) {
+        console.log(`📄 Aplicando migration ${migration.version}: ${migration.description}`);
         
-        -- Adicionar license_expires_at se não existir
-        IF NOT EXISTS (
-          SELECT 1 FROM information_schema.columns 
-          WHERE table_name = 'users' AND column_name = 'license_expires_at'
-        ) THEN
-          ALTER TABLE users ADD COLUMN license_expires_at TIMESTAMP;
-          RAISE NOTICE '✅ Coluna license_expires_at adicionada automaticamente';
-        END IF;
-      END $$;
-    `);
+        const filePath = path.join(__dirname, 'migrations', migration.file);
+        
+        if (!fs.existsSync(filePath)) {
+          console.error(`❌ Arquivo não encontrado: ${migration.file}`);
+          continue;
+        }
 
-    // Criar tabela messages
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS messages (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        sender VARCHAR(10) NOT NULL CHECK (sender IN ('user', 'bot')),
-        content TEXT NOT NULL,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
+        const sql = fs.readFileSync(filePath, 'utf8');
+        
+        try {
+          await pool.query(sql);
+          await pool.query(
+            'INSERT INTO migrations (version, description) VALUES ($1, $2)',
+            [migration.version, migration.description]
+          );
+          console.log(`✅ Migration ${migration.version} aplicada com sucesso!`);
+        } catch (error) {
+          console.error(`❌ Erro ao aplicar migration ${migration.version}:`, error.message);
+          throw error; // Parar se houver erro
+        }
+      } else {
+        console.log(`✓ Migration ${migration.version} já aplicada`);
+      }
+    }
 
-    // Criar índices
-    await pool.query(`
-      CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);
-      CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp);
-      CREATE INDEX IF NOT EXISTS idx_users_is_admin ON users(is_admin);
-      CREATE INDEX IF NOT EXISTS idx_users_license_expires ON users(license_expires_at);
-    `);
+    console.log('✅ Todas as migrations estão atualizadas!\n');
+  } catch (error) {
+    console.error('❌ Erro ao executar migrations:', error);
+    throw error;
+  }
+}
 
-    console.log('✅ Banco de dados verificado e atualizado');
-    console.log(`📊 Versão atual: ${currentVersion === 'none' ? 'Base instalada' : currentVersion}`);
+// Verificar conexão com banco de dados e executar migrations
+const initDatabase = async () => {
+  try {
+    // Testar conexão
+    await pool.query('SELECT 1');
+    console.log('✅ Conexão com banco de dados estabelecida');
+    
+    // Executar migrations automaticamente (estilo Flyway)
+    await runMigrations();
   } catch (error) {
     console.error('❌ Erro ao criar tabelas:', error);
   }
