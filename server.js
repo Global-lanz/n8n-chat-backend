@@ -37,6 +37,7 @@ const pool = new Pool({
 const MIGRATIONS = [
   { version: 'v0.0.3', file: 'v0.0.3_initial_schema.sql', description: 'Schema inicial' },
   { version: 'v0.1.0', file: 'v0.1.0_admin_system.sql', description: 'Sistema de administração' },
+  { version: 'v0.2.0', file: 'v0.2.0_admin_user_and_active_status.sql', description: 'Usuário admin padrão e status ativo' },
 ];
 
 async function runMigrations() {
@@ -120,6 +121,11 @@ const auth = async (req, res, next) => {
     const result = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.userId]);
     
     if (result.rows.length === 0) throw new Error();
+    
+    // Verificar se usuário está ativo
+    if (result.rows[0].is_active === false) {
+      return res.status(403).json({ error: 'Conta desabilitada. Contate o administrador.' });
+    }
     
     req.user = result.rows[0];
     req.userId = result.rows[0].id;
@@ -393,7 +399,7 @@ app.get('/api/admin/users', adminAuth, async (req, res) => {
 // Criar novo usuário (Admin)
 app.post('/api/admin/users', adminAuth, async (req, res) => {
   try {
-    const { username, email, password, license_expires_at } = req.body;
+    const { username, email, password, license_expires_at, is_admin, is_active } = req.body;
     
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Username, email e senha são obrigatórios' });
@@ -414,8 +420,8 @@ app.post('/api/admin/users', adminAuth, async (req, res) => {
     
     // Criar usuário
     const result = await pool.query(
-      'INSERT INTO users (username, email, password, license_expires_at) VALUES ($1, $2, $3, $4) RETURNING id, username, email, license_expires_at, created_at',
-      [username, email, hashedPassword, license_expires_at || null]
+      'INSERT INTO users (username, email, password, license_expires_at, is_admin, is_active) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, email, is_admin, is_active, license_expires_at, created_at',
+      [username, email, hashedPassword, license_expires_at || null, is_admin || false, is_active !== false]
     );
     
     res.status(201).json({ 
@@ -432,7 +438,7 @@ app.post('/api/admin/users', adminAuth, async (req, res) => {
 app.put('/api/admin/users/:id', adminAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, email, license_expires_at, is_admin } = req.body;
+    const { username, email, license_expires_at, is_admin, is_active } = req.body;
     
     // Verificar se o usuário existe
     const userCheck = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
@@ -446,10 +452,11 @@ app.put('/api/admin/users/:id', adminAuth, async (req, res) => {
        SET username = COALESCE($1, username), 
            email = COALESCE($2, email),
            license_expires_at = $3,
-           is_admin = COALESCE($4, is_admin)
-       WHERE id = $5 
-       RETURNING id, username, email, is_admin, license_expires_at, created_at`,
-      [username, email, license_expires_at, is_admin, id]
+           is_admin = COALESCE($4, is_admin),
+           is_active = COALESCE($5, is_active)
+       WHERE id = $6 
+       RETURNING id, username, email, is_admin, is_active, license_expires_at, created_at`,
+      [username, email, license_expires_at, is_admin, is_active, id]
     );
     
     res.json({ 
