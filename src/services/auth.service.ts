@@ -11,6 +11,7 @@ export interface AuthResponse {
     username: string;
     email: string;
     isAdmin: boolean;
+    isActive: boolean;
     licenseExpiresAt: Date | null;
   };
 }
@@ -59,6 +60,7 @@ export class AuthService {
         username: user.username,
         email: user.email,
         isAdmin: user.isAdmin,
+        isActive: user.isActive,
         licenseExpiresAt: user.licenseExpiresAt,
       },
     };
@@ -104,6 +106,7 @@ export class AuthService {
         username: user.username,
         email: user.email,
         isAdmin: user.isAdmin,
+        isActive: user.isActive,
         licenseExpiresAt: user.licenseExpiresAt,
       },
     };
