@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
-import { authMiddleware, adminMiddleware, AuthRequest } from '@middleware/auth.middleware';
+import { authMiddleware, AuthRequest } from '@middleware/auth.middleware';
 import { UserService } from '@services/user.service';
-import { CreateUserDto, UpdateUserDto, UpdateUsernameDto } from '@dto/user.dto';
+import { UpdateUsernameDto } from '@dto/user.dto';
 
 const router = Router();
 const userService = new UserService();

@@ -7,7 +7,7 @@ const router = Router();
 const userService = new UserService();
 
 // List all users
-router.get('/users', adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/users', adminMiddleware, async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const users = await userService.getAllUsers();
     res.json({ users });

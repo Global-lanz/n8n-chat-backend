@@ -65,12 +65,12 @@ class Server {
     setWebhookSocket(this.io);
 
     // Version endpoint
-    this.app.get('/api/version', (req: Request, res: Response) => {
+    this.app.get('/api/version', (_req: Request, res: Response) => {
       res.json({ version: VERSION });
     });
 
     // Health check
-    this.app.get('/api/health', async (req: Request, res: Response) => {
+    this.app.get('/api/health', async (_req: Request, res: Response) => {
       try {
         await prisma.$queryRaw`SELECT 1`;
         res.json({ status: 'ok', database: 'connected' });
