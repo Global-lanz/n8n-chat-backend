@@ -44,23 +44,53 @@ async function runMigrations() {
   try {
     console.log('🔄 Verificando migrations...');
 
-    // Criar tabela de controle de migrations
+    // 1. Criar tabela de controle de migrations (garantindo todas as colunas)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS migrations (
         id SERIAL PRIMARY KEY,
         version VARCHAR(50) UNIQUE NOT NULL,
-        description TEXT,
         applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    // Verificar quais migrations já foram aplicadas
+    // 2. Adicionar coluna description se não existir (para compatibilidade com bancos antigos)
+    const descriptionColumnCheck = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'migrations' AND column_name = 'description'
+    `);
+    
+    if (descriptionColumnCheck.rows.length === 0) {
+      await pool.query('ALTER TABLE migrations ADD COLUMN description TEXT');
+      console.log('✅ Coluna description adicionada à tabela migrations');
+    }
+
+    // 3. Adicionar coluna applied_at se não existir (para compatibilidade com bancos antigos)
+    const appliedAtColumnCheck = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'migrations' AND column_name = 'applied_at'
+    `);
+    
+    if (appliedAtColumnCheck.rows.length === 0) {
+      await pool.query('ALTER TABLE migrations ADD COLUMN applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
+      console.log('✅ Coluna applied_at adicionada à tabela migrations');
+    }
+
+    // 4. Verificar quais migrations já foram registradas
     const result = await pool.query('SELECT version FROM migrations ORDER BY applied_at');
     const appliedMigrations = result.rows.map(row => row.version);
 
-    // Executar migrations pendentes
+    // 5. Auto-corrigir: registrar migrations que já foram executadas mas não estão registradas
+    await autoRegisterExecutedMigrations(appliedMigrations);
+
+    // 6. Executar migrations pendentes
     for (const migration of MIGRATIONS) {
-      if (!appliedMigrations.includes(migration.version)) {
+      // Recarregar lista de migrations aplicadas (pode ter sido atualizada no passo 5)
+      const currentResult = await pool.query('SELECT version FROM migrations');
+      const currentAppliedMigrations = currentResult.rows.map(row => row.version);
+      
+      if (!currentAppliedMigrations.includes(migration.version)) {
         console.log(`📄 Aplicando migration ${migration.version}: ${migration.description}`);
         
         const filePath = path.join(__dirname, 'migrations', migration.file);
@@ -92,6 +122,68 @@ async function runMigrations() {
   } catch (error) {
     console.error('❌ Erro ao executar migrations:', error);
     throw error;
+  }
+}
+
+// Função para auto-registrar migrations já executadas (mas não registradas)
+async function autoRegisterExecutedMigrations(appliedMigrations) {
+  try {
+    // Verificar se tabela users existe (v0.0.3)
+    const tablesCheck = await pool.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_name IN ('users', 'messages')
+    `);
+    
+    const hasUsersTable = tablesCheck.rows.some(r => r.table_name === 'users');
+    const hasMessagesTable = tablesCheck.rows.some(r => r.table_name === 'messages');
+    
+    // Auto-registrar v0.0.3 se tabelas existem mas não está registrada
+    if (hasUsersTable && hasMessagesTable && !appliedMigrations.includes('v0.0.3')) {
+      await pool.query(
+        'INSERT INTO migrations (version, description, applied_at) VALUES ($1, $2, NOW()) ON CONFLICT (version) DO NOTHING',
+        ['v0.0.3', 'Schema inicial']
+      );
+      console.log('🔧 Migration v0.0.3 auto-registrada (estrutura já existia)');
+    }
+    
+    // Auto-registrar v0.1.0 se colunas existem mas não está registrada
+    if (hasUsersTable) {
+      const columnsCheck = await pool.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'users' AND column_name IN ('is_admin', 'license_expires_at')
+      `);
+      
+      const hasIsAdmin = columnsCheck.rows.some(r => r.column_name === 'is_admin');
+      const hasLicenseExpires = columnsCheck.rows.some(r => r.column_name === 'license_expires_at');
+      
+      if (hasIsAdmin && hasLicenseExpires && !appliedMigrations.includes('v0.1.0')) {
+        await pool.query(
+          'INSERT INTO migrations (version, description, applied_at) VALUES ($1, $2, NOW()) ON CONFLICT (version) DO NOTHING',
+          ['v0.1.0', 'Sistema de administração']
+        );
+        console.log('🔧 Migration v0.1.0 auto-registrada (estrutura já existia)');
+      }
+      
+      // Auto-registrar v0.2.0 se coluna is_active existe mas não está registrada
+      const isActiveCheck = await pool.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'users' AND column_name = 'is_active'
+      `);
+      
+      if (isActiveCheck.rows.length > 0 && !appliedMigrations.includes('v0.2.0')) {
+        await pool.query(
+          'INSERT INTO migrations (version, description, applied_at) VALUES ($1, $2, NOW()) ON CONFLICT (version) DO NOTHING',
+          ['v0.2.0', 'Usuário admin padrão e status ativo']
+        );
+        console.log('🔧 Migration v0.2.0 auto-registrada (estrutura já existia)');
+      }
+    }
+  } catch (error) {
+    console.error('⚠️  Erro ao auto-registrar migrations:', error.message);
+    // Não lançar erro aqui, apenas avisar
   }
 }
 
@@ -386,7 +478,7 @@ app.put('/api/user/username', auth, async (req, res) => {
 app.get('/api/admin/users', adminAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, username, email, is_admin, license_expires_at, created_at FROM users ORDER BY created_at DESC'
+      'SELECT id, username, email, is_admin, is_active, license_expires_at, created_at FROM users ORDER BY created_at DESC'
     );
     
     res.json({ users: result.rows });

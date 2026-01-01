@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-01-01
+
+### 🚀 Major Refactoring: TypeScript + Clean Architecture
+
+#### Added
+- **TypeScript**: Full TypeScript implementation with strict mode
+- **Prisma ORM**: Type-safe database access replacing direct PostgreSQL queries
+- **Clean Architecture**: 
+  - Service layer for business logic
+  - DTO validation for requests
+  - Middleware for cross-cutting concerns
+  - Dependency injection ready structure
+- **Project Structure**:
+  - `src/config/` - Configuration management
+  - `src/dto/` - Data Transfer Objects with validation
+  - `src/middleware/` - Auth and error handling
+  - `src/routes/` - Route handlers
+  - `src/services/` - Business logic layer
+- **Best Practices**:
+  - SOLID principles
+  - Separation of concerns
+  - Type safety throughout
+  - Professional error handling
+  - Path aliases for imports
+
+#### Changed
+- Migrated from JavaScript to TypeScript
+- Replaced `pg` with Prisma ORM
+- Refactored monolithic server.js into modular architecture
+- Updated Dockerfile for multi-stage TypeScript build
+- Enhanced package.json with TypeScript tooling
+- Improved development workflow with hot reload
+
+#### Maintained
+- ✅ All API endpoints remain compatible
+- ✅ Same request/response formats
+- ✅ Same authentication mechanism
+- ✅ Same database schema
+- ✅ Same WebSocket events
+- ✅ No frontend changes required
+
+#### Technical Improvements
+- Type-safe database queries
+- Compile-time error checking
+- Better IDE support and IntelliSense
+- Easier testing and maintenance
+- Professional codebase structure
+- Industry-standard architecture
+
+---
+
 ## [0.1.0] - 2025-12-26
 
 ### Added
