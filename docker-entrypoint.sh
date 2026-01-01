@@ -3,9 +3,9 @@ set -e
 
 echo "🚀 Starting Chat N8N Backend..."
 
-# Run Prisma migrations
-echo "📦 Running Prisma migrations..."
-npx prisma migrate deploy
+# For existing databases, use db push to sync schema without migration files
+echo "📦 Syncing database schema with Prisma..."
+npx prisma db push --accept-data-loss --skip-generate
 
 # Start the application
 echo "✅ Starting Node.js application..."
