@@ -1,0 +1,47 @@
+// Prisma Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int       @id @default(autoincrement())
+  username           String    @unique
+  email              String    @unique
+  password           String
+  isAdmin            Boolean   @default(false) @map("is_admin")
+  isActive           Boolean   @default(true) @map("is_active")
+  licenseExpiresAt   DateTime? @map("license_expires_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  
+  messages           Message[]
+  
+  @@map("users")
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  sender    String
+  content   String   @db.Text
+  timestamp DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@map("messages")
+}
+
+model Migration {
+  id          Int      @id @default(autoincrement())
+  version     String   @unique
+  description String?  @db.Text
+  appliedAt   DateTime @default(now()) @map("applied_at")
+  
+  @@map("migrations")
+}
