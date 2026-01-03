@@ -1,10 +1,12 @@
 import { Router, Response } from 'express';
 import { adminMiddleware, AuthRequest } from '@middleware/auth.middleware';
 import { UserService } from '@services/user.service';
+import { MessageService } from '@services/message.service';
 import { CreateUserDto, UpdateUserDto } from '@dto/user.dto';
 
 const router = Router();
 const userService = new UserService();
+const messageService = new MessageService();
 
 // List all users
 router.get('/users', adminMiddleware, async (_req: AuthRequest, res: Response): Promise<void> => {
@@ -57,6 +59,27 @@ router.delete('/users/:id', adminMiddleware, async (req: AuthRequest, res: Respo
     
     await userService.deleteUser(id);
     res.json({ message: 'Usuário deletado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Get all messages from all users
+router.get('/messages', adminMiddleware, async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const messages = await messageService.getAllMessages();
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Get messages from specific user
+router.get('/messages/:userId', adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = parseInt(req.params.userId, 10);
+    const messages = await messageService.getUserMessages(userId);
+    res.json(messages);
   } catch (error) {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }

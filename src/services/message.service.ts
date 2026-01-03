@@ -12,6 +12,31 @@ export interface MessageData {
 }
 
 export class MessageService {
+  async getAllMessages(limit: number = 1000): Promise<MessageData[]> {
+    const messages = await prisma.message.findMany({
+      orderBy: { timestamp: 'desc' },
+      take: limit,
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          }
+        }
+      }
+    });
+
+    return messages.map(msg => ({
+      id: msg.id,
+      userId: msg.userId,
+      sender: msg.sender,
+      content: msg.content,
+      timestamp: msg.timestamp,
+      user: msg.user,
+    })) as any;
+  }
+
   async getUserMessages(userId: number, limit: number = 100): Promise<MessageData[]> {
     const messages = await prisma.message.findMany({
       where: { userId },
