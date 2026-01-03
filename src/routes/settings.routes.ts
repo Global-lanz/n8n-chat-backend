@@ -8,7 +8,7 @@ const router = Router();
  * GET /api/admin/settings
  * Busca todas as configurações (apenas admin)
  */
-router.get('/', adminMiddleware, async (req: Request, res: Response) => {
+router.get('/', adminMiddleware, async (_req: Request, res: Response) => {
   try {
     const settings = await SettingsService.getAllSettings();
     

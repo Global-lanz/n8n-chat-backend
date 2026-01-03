@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 import { SettingsService } from './settings.service';
 
 const prisma = new PrismaClient();
@@ -82,7 +82,7 @@ export class WebhookService {
    */
   private static async handleExistingUser(
     user: any,
-    event: string
+    _event: string
   ): Promise<WebhookCreateUserResponse> {
     // Se estava inativo, reativa
     if (!user.isActive) {
