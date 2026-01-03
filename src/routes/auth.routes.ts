@@ -1,19 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { AuthService } from '@services/auth.service';
-import { RegisterDto, LoginDto } from '@dto/auth.dto';
+import { LoginDto } from '@dto/auth.dto';
 
 const router = Router();
 const authService = new AuthService();
-
-router.post('/register', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const dto = Object.assign(new RegisterDto(), req.body);
-    const result = await authService.register(dto);
-    res.status(201).json(result);
-  } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
-  }
-});
 
 router.post('/login', async (req: Request, res: Response): Promise<void> => {
   try {
