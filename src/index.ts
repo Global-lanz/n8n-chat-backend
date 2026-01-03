@@ -11,6 +11,7 @@ import userRoutes from '@routes/user.routes';
 import adminRoutes from '@routes/admin.routes';
 import webhookRoutes from '@routes/webhook.routes';
 import configRoutes from '@routes/config.routes';
+import settingsRoutes from './routes/settings.routes';
 import { setSocketIO as setMessageSocket } from '@routes/message.routes';
 import { setSocketIO as setWebhookSocket } from '@routes/webhook.routes';
 import { AuthService } from '@services/auth.service';
@@ -59,6 +60,7 @@ class Server {
     this.app.use('/api/messages', messageRoutes);
     this.app.use('/api/user', userRoutes);
     this.app.use('/api/admin', adminRoutes);
+    this.app.use('/api/admin/settings', settingsRoutes);
     this.app.use('/api/webhook', webhookRoutes);
     this.app.use('/api/config', configRoutes);
 
