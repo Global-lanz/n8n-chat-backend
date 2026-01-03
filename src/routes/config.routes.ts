@@ -11,7 +11,7 @@ interface VersionInfo {
   buildDate: string;
 }
 
-// Ler versão (prioriza version.json, fallback para package.json)
+// Ler versão do backend (prioriza version.json, fallback para package.json)
 let versionInfo: VersionInfo = {
   version: '1.0.0',
   buildDate: new Date().toISOString()
