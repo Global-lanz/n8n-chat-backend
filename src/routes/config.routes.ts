@@ -52,7 +52,7 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
       botName: botNameSetting?.value || process.env.BOT_NAME || 'NorteIA',
       version: versionInfo.version,
       buildDate: versionInfo.buildDate,
-      environment: process.env.NODE_ENV || 'development'
+      environment: process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'development'
     });
   } catch (error) {
     // Fallback em caso de erro
@@ -60,7 +60,7 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
       botName: process.env.BOT_NAME || 'Assistente de IA',
       version: versionInfo.version,
       buildDate: versionInfo.buildDate,
-      environment: process.env.NODE_ENV || 'development'
+      environment: process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'development'
     });
   }
 });
