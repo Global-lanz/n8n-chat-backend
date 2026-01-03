@@ -1,0 +1,68 @@
+export class CreateUserDto {
+  username!: string;
+  email!: string;
+  password!: string;
+  licenseExpiresAt?: Date | null;
+  isAdmin?: boolean;
+  isActive?: boolean;
+
+  validate(): string[] {
+    const errors: string[] = [];
+
+    if (!this.username || this.username.trim().length === 0) {
+      errors.push('Username é obrigatório');
+    }
+
+    if (!this.email || !this.isValidEmail(this.email)) {
+      errors.push('Email inválido');
+    }
+
+    if (!this.password || this.password.length < 6) {
+      errors.push('Senha deve ter no mínimo 6 caracteres');
+    }
+
+    return errors;
+  }
+
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+}
+
+export class UpdateUserDto {
+  username?: string;
+  email?: string;
+  licenseExpiresAt?: Date | null;
+  isAdmin?: boolean;
+  isActive?: boolean;
+
+  validate(): string[] {
+    const errors: string[] = [];
+
+    if (this.email && !this.isValidEmail(this.email)) {
+      errors.push('Email inválido');
+    }
+
+    return errors;
+  }
+
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+}
+
+export class UpdateUsernameDto {
+  username!: string;
+
+  validate(): string[] {
+    const errors: string[] = [];
+
+    if (!this.username || this.username.trim().length === 0) {
+      errors.push('Nome é obrigatório');
+    }
+
+    return errors;
+  }
+}
