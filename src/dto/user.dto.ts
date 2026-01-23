@@ -60,12 +60,36 @@ export class UpdateUserDto {
 
 export class UpdateUsernameDto {
   username!: string;
+  theme?: string;
 
   validate(): string[] {
     const errors: string[] = [];
 
     if (!this.username || this.username.trim().length === 0) {
       errors.push('Nome é obrigatório');
+    }
+
+    if (this.theme && !['dark', 'light'].includes(this.theme)) {
+      errors.push('Tema deve ser "dark" ou "light"');
+    }
+
+    return errors;
+  }
+}
+
+export class ChangePasswordDto {
+  currentPassword!: string;
+  newPassword!: string;
+
+  validate(): string[] {
+    const errors: string[] = [];
+
+    if (!this.currentPassword || this.currentPassword.trim().length === 0) {
+      errors.push('Senha atual é obrigatória');
+    }
+
+    if (!this.newPassword || this.newPassword.length < 6) {
+      errors.push('Nova senha deve ter no mínimo 6 caracteres');
     }
 
     return errors;
