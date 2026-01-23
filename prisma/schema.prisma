@@ -16,6 +16,7 @@ model User {
   password           String
   isAdmin            Boolean   @default(false) @map("is_admin")
   isActive           Boolean   @default(true) @map("is_active")
+  theme              String    @default("dark")
   licenseExpiresAt   DateTime? @map("license_expires_at")
   createdAt          DateTime  @default(now()) @map("created_at")
   
