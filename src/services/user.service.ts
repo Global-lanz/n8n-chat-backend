@@ -1,6 +1,6 @@
 import prisma from '@config/database';
 import bcrypt from 'bcryptjs';
-import { CreateUserDto, UpdateUserDto, UpdateUsernameDto } from '@dto/user.dto';
+import { CreateUserDto, UpdateUserDto, UpdateUsernameDto, ChangePasswordDto } from '@dto/user.dto';
 
 export interface UserData {
   id: number;
@@ -8,6 +8,7 @@ export interface UserData {
   email: string;
   isAdmin: boolean;
   isActive: boolean;
+  theme: string;
   licenseExpiresAt: Date | null;
   createdAt: Date;
 }
@@ -22,6 +23,7 @@ export class UserService {
         email: true,
         isAdmin: true,
         isActive: true,
+        theme: true,
         licenseExpiresAt: true,
         createdAt: true,
       },
@@ -38,6 +40,7 @@ export class UserService {
         email: true,
         isAdmin: true,
         isActive: true,
+        theme: true,
         licenseExpiresAt: true,
         createdAt: true,
       },
@@ -87,6 +90,7 @@ export class UserService {
         email: true,
         isAdmin: true,
         isActive: true,
+        theme: true,
         licenseExpiresAt: true,
         createdAt: true,
       },
@@ -108,22 +112,31 @@ export class UserService {
       throw new Error('Usuário não encontrado');
     }
 
+    // Prepare update data
+    const updateData: any = {
+      username: dto.username,
+      email: dto.email,
+      licenseExpiresAt: dto.licenseExpiresAt,
+      isAdmin: dto.isAdmin,
+      isActive: dto.isActive,
+    };
+
+    // Hash password if provided
+    if (dto.password) {
+      updateData.password = await bcrypt.hash(dto.password, 10);
+    }
+
     // Update user
     const user = await prisma.user.update({
       where: { id },
-      data: {
-        username: dto.username,
-        email: dto.email,
-        licenseExpiresAt: dto.licenseExpiresAt,
-        isAdmin: dto.isAdmin,
-        isActive: dto.isActive,
-      },
+      data: updateData,
       select: {
         id: true,
         username: true,
         email: true,
         isAdmin: true,
         isActive: true,
+        theme: true,
         licenseExpiresAt: true,
         createdAt: true,
       },
@@ -154,19 +167,50 @@ export class UserService {
     // Update username
     const user = await prisma.user.update({
       where: { id },
-      data: { username: dto.username.trim() },
+      data: { 
+        username: dto.username.trim(),
+        ...(dto.theme && { theme: dto.theme })
+      },
       select: {
         id: true,
         username: true,
         email: true,
         isAdmin: true,
         isActive: true,
+        theme: true,
         licenseExpiresAt: true,
         createdAt: true,
       },
     });
 
     return user;
+  }
+
+  async changePassword(id: number, dto: ChangePasswordDto): Promise<void> {
+    // Validate DTO
+    const errors = dto.validate();
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+
+    // Update password
+    await prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
   }
 
   async deleteUser(id: number): Promise<void> {
