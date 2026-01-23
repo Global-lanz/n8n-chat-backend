@@ -193,20 +193,14 @@ export class UserService {
       throw new Error(errors.join(', '));
     }
 
-    // Get user with password
+    // Check if user exists
     const user = await prisma.user.findUnique({
       where: { id },
-      select: { id: true, password: true },
+      select: { id: true },
     });
 
     if (!user) {
       throw new Error('Usuário não encontrado');
-    }
-
-    // Verify current password
-    const isPasswordValid = await bcrypt.compare(dto.currentPassword, user.password);
-    if (!isPasswordValid) {
-      throw new Error('Senha atual incorreta');
     }
 
     // Hash new password

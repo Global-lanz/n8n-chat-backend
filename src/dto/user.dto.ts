@@ -78,15 +78,10 @@ export class UpdateUsernameDto {
 }
 
 export class ChangePasswordDto {
-  currentPassword!: string;
   newPassword!: string;
 
   validate(): string[] {
     const errors: string[] = [];
-
-    if (!this.currentPassword || this.currentPassword.trim().length === 0) {
-      errors.push('Senha atual é obrigatória');
-    }
 
     if (!this.newPassword || this.newPassword.length < 6) {
       errors.push('Nova senha deve ter no mínimo 6 caracteres');
