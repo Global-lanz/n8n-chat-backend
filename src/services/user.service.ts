@@ -108,16 +108,24 @@ export class UserService {
       throw new Error('Usuário não encontrado');
     }
 
+    // Prepare update data
+    const updateData: any = {
+      username: dto.username,
+      email: dto.email,
+      licenseExpiresAt: dto.licenseExpiresAt,
+      isAdmin: dto.isAdmin,
+      isActive: dto.isActive,
+    };
+
+    // Hash password if provided
+    if (dto.password) {
+      updateData.password = await bcrypt.hash(dto.password, 10);
+    }
+
     // Update user
     const user = await prisma.user.update({
       where: { id },
-      data: {
-        username: dto.username,
-        email: dto.email,
-        licenseExpiresAt: dto.licenseExpiresAt,
-        isAdmin: dto.isAdmin,
-        isActive: dto.isActive,
-      },
+      data: updateData,
       select: {
         id: true,
         username: true,
