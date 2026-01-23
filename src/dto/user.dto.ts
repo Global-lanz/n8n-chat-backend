@@ -33,6 +33,7 @@ export class CreateUserDto {
 export class UpdateUserDto {
   username?: string;
   email?: string;
+  password?: string;
   licenseExpiresAt?: Date | null;
   isAdmin?: boolean;
   isActive?: boolean;
@@ -42,6 +43,10 @@ export class UpdateUserDto {
 
     if (this.email && !this.isValidEmail(this.email)) {
       errors.push('Email inválido');
+    }
+
+    if (this.password && this.password.length < 6) {
+      errors.push('Senha deve ter no mínimo 6 caracteres');
     }
 
     return errors;
