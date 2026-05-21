@@ -15,6 +15,7 @@ import settingsRoutes from './routes/settings.routes';
 import { setSocketIO as setMessageSocket } from '@routes/message.routes';
 import { setSocketIO as setWebhookSocket } from '@routes/webhook.routes';
 import { AuthService } from '@services/auth.service';
+import { BootstrapService } from '@services/bootstrap.service';
 import pkg from '../package.json';
 
 const VERSION = pkg.version;
@@ -24,6 +25,7 @@ class Server {
   private server: http.Server;
   private io: SocketIOServer;
   private authService: AuthService;
+  private bootstrapService: BootstrapService;
 
   constructor() {
     this.app = express();
@@ -32,6 +34,7 @@ class Server {
       cors: this.getCorsConfig(),
     });
     this.authService = new AuthService();
+    this.bootstrapService = new BootstrapService();
 
     this.setupMiddleware();
     this.setupRoutes();
@@ -113,6 +116,9 @@ class Server {
       // Test database connection
       await prisma.$connect();
       console.log('✅ Database connected');
+
+      // Ensure there is at least one admin account configured by environment
+      await this.bootstrapService.ensureInitialAdmin();
 
       // Start server
       this.server.listen(config.port, () => {
