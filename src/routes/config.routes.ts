@@ -48,8 +48,14 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
       where: { key: 'default_bot_name' }
     });
 
+    // Buscar a paleta de cores da tabela de settings
+    const paletteSetting = await prisma.settings.findUnique({
+      where: { key: 'system_color_palette' }
+    });
+
     res.json({
       botName: botNameSetting?.value || process.env.BOT_NAME || 'NorteIA',
+      systemPalette: paletteSetting?.value || 'green',
       version: versionInfo.version,
       buildDate: versionInfo.buildDate,
       environment: process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'development'
@@ -58,6 +64,7 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
     // Fallback em caso de erro
     res.json({
       botName: process.env.BOT_NAME || 'Assistente de IA',
+      systemPalette: 'green',
       version: versionInfo.version,
       buildDate: versionInfo.buildDate,
       environment: process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'development'

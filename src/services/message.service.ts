@@ -97,12 +97,19 @@ export class MessageService {
 
   async sendToN8N(userId: number, username: string, content: string): Promise<string | null> {
     try {
+      // Buscar o prompt do sistema da tabela de settings
+      const systemPromptSetting = await prisma.settings.findUnique({
+        where: { key: 'system_prompt' }
+      });
+      const systemPrompt = systemPromptSetting?.value || 'Você é um assistente virtual útil.';
+
       const response = await axios.post(
         config.n8nWebhookUrl,
         {
           userId,
           username,
           message: content,
+          systemPrompt,
           timestamp: new Date(),
         },
         {
