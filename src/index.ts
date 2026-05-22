@@ -120,6 +120,9 @@ class Server {
       // Ensure there is at least one admin account configured by environment
       await this.bootstrapService.ensureInitialAdmin();
 
+      // Ensure default settings are seeded
+      await this.bootstrapService.ensureDefaultSettings();
+
       // Start server
       this.server.listen(config.port, () => {
         console.log(`🚀 Servidor rodando na porta ${config.port}`);
