@@ -56,7 +56,10 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response): Promis
       }
     } catch (n8nError) {
       console.error('Erro ao chamar N8N:', n8nError);
-      res.json({ userMessage, error: 'Erro ao processar resposta' });
+      res.json({
+        userMessage,
+        error: n8nError instanceof Error ? n8nError.message : 'Erro ao processar resposta'
+      });
     }
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
