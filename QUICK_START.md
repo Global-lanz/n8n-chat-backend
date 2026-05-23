@@ -33,7 +33,7 @@ DATABASE_URL="postgresql://username:password@localhost:5432/chatdb"
 JWT_SECRET="your-super-secret-jwt-key-change-this"
 
 # N8N Webhooks
-N8N_WEBHOOK_URL="https://your-n8n-instance.com/webhook/chat"
+N8N_WEBHOOK_URL="https://unnaove-madden-unrecorded.ngrok-free.dev/webhook/793dce42-bad4-4c1c-918f-b38cbfbb4e29/chat"
 N8N_EMAIL_WEBHOOK_URL="https://your-n8n-instance.com/webhook/email"
 
 # Server Configuration

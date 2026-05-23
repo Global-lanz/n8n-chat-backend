@@ -1,6 +1,6 @@
 import prisma from '@config/database';
 import config from '@config/index';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { SendMessageDto } from '@dto/message.dto';
 
 export interface MessageData {
@@ -124,6 +124,29 @@ export class MessageService {
 
       return null;
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<any>;
+        const status = axiosError.response?.status;
+        const responseData = axiosError.response?.data;
+
+        console.error('Erro ao chamar N8N:', {
+          url: config.n8nWebhookUrl,
+          status,
+          responseData,
+          message: axiosError.message,
+        });
+
+        if (status === 404) {
+          throw new Error(`Webhook N8N não encontrado: verifique N8N_WEBHOOK_URL (${config.n8nWebhookUrl}) e se o workflow está ativo`);
+        }
+
+        throw new Error(
+          status
+            ? `Erro ao chamar N8N (${status})`
+            : 'Erro ao chamar N8N'
+        );
+      }
+
       console.error('Erro ao chamar N8N:', error);
       throw new Error('Erro ao processar resposta');
     }
