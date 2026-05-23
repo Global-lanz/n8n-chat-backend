@@ -363,10 +363,22 @@ app.post('/api/messages', auth, async (req, res) => {
     
     // Enviar para N8N webhook
     try {
+      // Buscar o prompt do sistema no Postgres
+      let systemPrompt = 'Você é um assistente virtual útil.';
+      try {
+        const promptResult = await pool.query('SELECT value FROM settings WHERE key = $1', ['system_prompt']);
+        if (promptResult.rows.length > 0) {
+          systemPrompt = promptResult.rows[0].value;
+        }
+      } catch (err) {
+        console.error('Erro ao buscar prompt do Postgres:', err);
+      }
+
       const n8nResponse = await axios.post(process.env.N8N_WEBHOOK_URL, {
         userId: req.userId,
         username: req.user.username,
         message: content,
+        systemPrompt,
         timestamp: new Date()
       }, {
         headers: { 'Content-Type': 'application/json' },
