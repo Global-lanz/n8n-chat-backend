@@ -54,7 +54,7 @@ class Server {
 
   private setupMiddleware(): void {
     this.app.use(cors(this.getCorsConfig()));
-    this.app.use(express.json());
+    this.app.use(express.json({ limit: '5mb' }));
   }
 
   private setupRoutes(): void {
