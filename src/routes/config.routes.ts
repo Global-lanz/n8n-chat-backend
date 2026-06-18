@@ -43,19 +43,16 @@ try {
 // Get app configuration
 router.get('/', async (_req: Request, res: Response): Promise<void> => {
   try {
-    // Buscar o nome do bot da tabela de settings
-    const botNameSetting = await prisma.settings.findUnique({
-      where: { key: 'default_bot_name' }
-    });
-
-    // Buscar a paleta de cores da tabela de settings
-    const paletteSetting = await prisma.settings.findUnique({
-      where: { key: 'system_color_palette' }
-    });
+    const [botNameSetting, paletteSetting, logoSetting] = await Promise.all([
+      prisma.settings.findUnique({ where: { key: 'default_bot_name' } }),
+      prisma.settings.findUnique({ where: { key: 'system_color_palette' } }),
+      prisma.settings.findUnique({ where: { key: 'app_logo' } }),
+    ]);
 
     res.json({
       botName: botNameSetting?.value || process.env.BOT_NAME || 'NorteIA',
       systemPalette: paletteSetting?.value || 'green',
+      appLogo: logoSetting?.value || null,
       version: versionInfo.version,
       buildDate: versionInfo.buildDate,
       environment: process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'development'
