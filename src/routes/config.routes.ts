@@ -49,22 +49,28 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
       prisma.settings.findUnique({ where: { key: 'app_logo' } }),
     ]);
 
+    const authMode = process.env.AUTH_MODE || 'internal';
+
     res.json({
       botName: botNameSetting?.value || process.env.BOT_NAME || 'NorteIA',
       systemPalette: paletteSetting?.value || 'green',
       appLogo: logoSetting?.value || null,
       version: versionInfo.version,
       buildDate: versionInfo.buildDate,
-      environment: process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'development'
+      environment: process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'development',
+      authMode,
+      authPortalUrl: authMode === 'external' ? (process.env.AUTH_PORTAL_URL || null) : null,
     });
   } catch (error) {
-    // Fallback em caso de erro
+    const fallbackAuthMode = process.env.AUTH_MODE || 'internal';
     res.json({
       botName: process.env.BOT_NAME || 'Assistente de IA',
       systemPalette: 'green',
       version: versionInfo.version,
       buildDate: versionInfo.buildDate,
-      environment: process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'development'
+      environment: process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'development',
+      authMode: fallbackAuthMode,
+      authPortalUrl: fallbackAuthMode === 'external' ? (process.env.AUTH_PORTAL_URL || null) : null,
     });
   }
 });

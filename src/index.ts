@@ -15,6 +15,7 @@ import settingsRoutes from './routes/settings.routes';
 import { setSocketIO as setMessageSocket } from '@routes/message.routes';
 import { setSocketIO as setWebhookSocket } from '@routes/webhook.routes';
 import { AuthService } from '@services/auth.service';
+import { ExternalAuthService } from '@services/external-auth.service';
 import { BootstrapService } from '@services/bootstrap.service';
 import pkg from '../package.json';
 
@@ -25,6 +26,7 @@ class Server {
   private server: http.Server;
   private io: SocketIOServer;
   private authService: AuthService;
+  private externalAuthService: ExternalAuthService;
   private bootstrapService: BootstrapService;
 
   constructor() {
@@ -34,6 +36,7 @@ class Server {
       cors: this.getCorsConfig(),
     });
     this.authService = new AuthService();
+    this.externalAuthService = new ExternalAuthService();
     this.bootstrapService = new BootstrapService();
 
     this.setupMiddleware();
@@ -93,9 +96,23 @@ class Server {
 
       socket.on('authenticate', async (token: string) => {
         try {
-          const decoded = await this.authService.verifyToken(token);
-          socket.join(decoded.userId.toString());
-          console.log(`✅ Usuário ${decoded.userId} autenticado no socket`);
+          // Resolve to the LOCAL user id so bot-message delivery (io.to(userId))
+          // matches messages created with req.userId in both auth modes.
+          let localUserId: number;
+          if (config.authMode === 'external') {
+            const claims = this.externalAuthService.verify(token);
+            if (!this.externalAuthService.hasModuleEntitlement(claims)) {
+              console.error('❌ Socket sem entitlement do módulo');
+              return;
+            }
+            const local = await this.externalAuthService.upsertLocalUser(claims);
+            localUserId = local.id;
+          } else {
+            const decoded = await this.authService.verifyToken(token);
+            localUserId = decoded.userId;
+          }
+          socket.join(localUserId.toString());
+          console.log(`✅ Usuário ${localUserId} autenticado no socket`);
         } catch (error) {
           console.error('❌ Erro na autenticação do socket:', error);
         }
