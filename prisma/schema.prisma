@@ -18,10 +18,13 @@ model User {
   isActive           Boolean   @default(true) @map("is_active")
   theme              String    @default("dark")
   licenseExpiresAt   DateTime? @map("license_expires_at")
+  // Identity id from the central auth provider (blueprint-auth). Only populated
+  // when AUTH_MODE=external; null for self-contained (internal) deployments.
+  authId             String?   @unique @map("auth_id")
   createdAt          DateTime  @default(now()) @map("created_at")
-  
+
   messages           Message[]
-  
+
   @@map("users")
 }
 
