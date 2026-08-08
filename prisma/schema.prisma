@@ -21,6 +21,10 @@ model User {
   // Identity id from the central auth provider (blueprint-auth). Only populated
   // when AUTH_MODE=external; null for self-contained (internal) deployments.
   authId             String?   @unique @map("auth_id")
+  // Identity id from a third-party embed integration (e.g. an app embedding
+  // this chat via POST /api/embed/session). Independent of authId — separate
+  // concern, own JIT-provisioning path, not tied to AUTH_MODE.
+  embedExternalId    String?   @unique @map("embed_external_id")
   createdAt          DateTime  @default(now()) @map("created_at")
 
   messages           Message[]

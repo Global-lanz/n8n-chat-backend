@@ -11,6 +11,7 @@ import userRoutes from '@routes/user.routes';
 import adminRoutes from '@routes/admin.routes';
 import webhookRoutes from '@routes/webhook.routes';
 import configRoutes from '@routes/config.routes';
+import embedRoutes from '@routes/embed.routes';
 import settingsRoutes from './routes/settings.routes';
 import { setSocketIO as setMessageSocket } from '@routes/message.routes';
 import { setSocketIO as setWebhookSocket } from '@routes/webhook.routes';
@@ -69,6 +70,7 @@ class Server {
     this.app.use('/api/admin/settings', settingsRoutes);
     this.app.use('/api/webhook', webhookRoutes);
     this.app.use('/api/config', configRoutes);
+    this.app.use('/api/embed', embedRoutes);
 
     // Set socket IO for routes that need it
     setMessageSocket(this.io);
