@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import http from 'http';
+import jwt from 'jsonwebtoken';
 import { Server as SocketIOServer } from 'socket.io';
 import config from '@config/index';
 import prisma from '@config/database';
@@ -100,18 +101,31 @@ class Server {
         try {
           // Resolve to the LOCAL user id so bot-message delivery (io.to(userId))
           // matches messages created with req.userId in both auth modes.
-          let localUserId: number;
-          if (config.authMode === 'external') {
-            const claims = this.externalAuthService.verify(token);
-            if (!this.externalAuthService.hasModuleEntitlement(claims)) {
-              console.error('❌ Socket sem entitlement do módulo');
-              return;
+          // Embed-SSO tokens (embed: true, local JWT_SECRET) are tried first,
+          // same as authMiddleware — they work regardless of AUTH_MODE.
+          let localUserId: number | undefined;
+          try {
+            const decoded = jwt.verify(token, config.jwtSecret) as { userId: number; embed?: boolean };
+            if (decoded.embed) {
+              localUserId = decoded.userId;
             }
-            const local = await this.externalAuthService.upsertLocalUser(claims);
-            localUserId = local.id;
-          } else {
-            const decoded = await this.authService.verifyToken(token);
-            localUserId = decoded.userId;
+          } catch {
+            // Not a local/embed token — fall through to AUTH_MODE's own check.
+          }
+
+          if (localUserId === undefined) {
+            if (config.authMode === 'external') {
+              const claims = this.externalAuthService.verify(token);
+              if (!this.externalAuthService.hasModuleEntitlement(claims)) {
+                console.error('❌ Socket sem entitlement do módulo');
+                return;
+              }
+              const local = await this.externalAuthService.upsertLocalUser(claims);
+              localUserId = local.id;
+            } else {
+              const decoded = await this.authService.verifyToken(token);
+              localUserId = decoded.userId;
+            }
           }
           socket.join(localUserId.toString());
           console.log(`✅ Usuário ${localUserId} autenticado no socket`);

@@ -23,16 +23,21 @@ export class EmbedAuthService {
   /**
    * Mints a session for a user already authenticated in a third-party app.
    * JIT-provisions (or reuses) a local user keyed by embedExternalId, then
-   * signs the exact same token shape AuthService.login produces — no
-   * expiresIn, matching every other internal-mode session. The frontend has
-   * no token-refresh flow, so a short-lived token here would silently drop
-   * the embedded widget back to the login screen mid-conversation, defeating
-   * the point of this endpoint. The existing /auth/callback route consumes
-   * it as-is; no frontend changes needed.
+   * signs a local JWT (embed: true) — no expiresIn, matching every other
+   * session in this app. The frontend has no token-refresh flow, so a
+   * short-lived token here would silently drop the embedded widget back to
+   * the login screen mid-conversation, defeating the point of this endpoint.
+   * The existing /auth/callback route consumes it as-is; no frontend changes
+   * needed. Works on both AUTH_MODE=internal and =external deployments — see
+   * the `embed` claim handling in auth.middleware.ts.
    */
   async mintSession(identity: EmbedIdentity): Promise<EmbedSessionResult> {
     const user = await this.upsertLocalUser(identity);
-    const token = jwt.sign({ userId: user.id }, config.jwtSecret);
+    // The `embed: true` claim lets authMiddleware recognize this token
+    // regardless of AUTH_MODE (see auth.middleware.ts) — required for
+    // external-mode deployments like guia, which otherwise only ever try to
+    // verify the central blueprint-auth JWT.
+    const token = jwt.sign({ userId: user.id, embed: true }, config.jwtSecret);
 
     return {
       token,
