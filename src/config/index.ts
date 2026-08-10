@@ -23,6 +23,12 @@ interface Config {
   authJwtSecret?: string;
   authBaseUrl?: string;
   moduleKey: string;
+  // --- Embed SSO (optional, opt-in) ---
+  // Shared secret a third-party backend presents (header x-embed-token) to
+  // POST /api/embed/session to mint a session for one of its own logged-in
+  // users. Independent of AUTH_MODE — works the same whether this app runs
+  // internal or external auth for its own browser-based login.
+  embedSharedSecret?: string;
 }
 
 const authMode: AuthMode = process.env.AUTH_MODE === 'external' ? 'external' : 'internal';
@@ -44,6 +50,7 @@ const config: Config = {
   authJwtSecret: process.env.AUTH_JWT_SECRET,
   authBaseUrl: process.env.AUTH_BASE_URL,
   moduleKey: process.env.MODULE_KEY || 'chat',
+  embedSharedSecret: process.env.EMBED_SHARED_SECRET,
 };
 
 // Validation
