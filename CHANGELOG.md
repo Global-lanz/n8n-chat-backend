@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.6.0
+
+### Minor Changes
+
+- 70e4f45: `GET /api/config` agora também expõe `appLogoDark`, lida da nova chave de settings `app_logo_dark` — a logo usada quando o usuário está no tema escuro. A chave `app_logo` existente passa a ser especificamente a logo do tema claro; sem `app_logo_dark` definida, o frontend cai de volta pra `app_logo` nos dois temas, então nenhuma instalação existente perde a logo já configurada.
+- 70e4f45: `GET /api/config` agora também expõe `welcomeMessage` e `inputPlaceholder`, lidos das novas chaves de settings `chat_welcome_message` e `chat_input_placeholder` (com os textos atuais como valor padrão, seedadas em `ensureDefaultSettings`).
+
+  O valor padrão da coluna `theme` de `User` passa de `dark` para `light` (novos usuários), replicado também no fallback de provisionamento JIT do modo de autenticação externa — usuários existentes mantêm o tema que já tinham.
+
+### Patch Changes
+
+- 70e4f45: Troca a imagem base do Dockerfile de `node:20-bullseye-slim` para `node:20-bookworm-slim` (build e produção) — o build estava falhando no `apt-get install` por pacotes do `bullseye-security` (Debian 11) que já saíram do pool do mirror (404 em `libperl5.32`, `xz-utils`, `linux-libc-dev`).
+
+  A imagem `-slim` não vem com `openssl` instalado, e o engine do Prisma precisa da lib em tempo de execução — sem ela o container caía com "Prisma failed to detect the libssl/openssl version" seguido de `Schema engine error` no `prisma db push` do boot. Instala `openssl` explicitamente nas duas etapas do Dockerfile.
+
 ## 1.5.0
 
 ### Minor Changes
