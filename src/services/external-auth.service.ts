@@ -131,7 +131,7 @@ export class ExternalAuthService {
         email: local.email,
         isAdmin: local.isAdmin,
         isActive: local.isActive,
-        theme: full?.theme ?? 'dark',
+        theme: full?.theme ?? 'light',
         licenseExpiresAt: null,
       },
       entitlements: claims.entitlements,
