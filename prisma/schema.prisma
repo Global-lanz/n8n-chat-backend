@@ -16,7 +16,7 @@ model User {
   password           String
   isAdmin            Boolean   @default(false) @map("is_admin")
   isActive           Boolean   @default(true) @map("is_active")
-  theme              String    @default("dark")
+  theme              String    @default("light")
   licenseExpiresAt   DateTime? @map("license_expires_at")
   // Identity id from the central auth provider (blueprint-auth). Only populated
   // when AUTH_MODE=external; null for self-contained (internal) deployments.
