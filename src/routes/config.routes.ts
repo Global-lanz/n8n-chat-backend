@@ -43,10 +43,12 @@ try {
 // Get app configuration
 router.get('/', async (_req: Request, res: Response): Promise<void> => {
   try {
-    const [botNameSetting, paletteSetting, logoSetting] = await Promise.all([
+    const [botNameSetting, paletteSetting, logoSetting, welcomeMessageSetting, inputPlaceholderSetting] = await Promise.all([
       prisma.settings.findUnique({ where: { key: 'default_bot_name' } }),
       prisma.settings.findUnique({ where: { key: 'system_color_palette' } }),
       prisma.settings.findUnique({ where: { key: 'app_logo' } }),
+      prisma.settings.findUnique({ where: { key: 'chat_welcome_message' } }),
+      prisma.settings.findUnique({ where: { key: 'chat_input_placeholder' } }),
     ]);
 
     const authMode = process.env.AUTH_MODE || 'internal';
@@ -55,6 +57,8 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
       botName: botNameSetting?.value || process.env.BOT_NAME || 'NorteIA',
       systemPalette: paletteSetting?.value || 'green',
       appLogo: logoSetting?.value || null,
+      welcomeMessage: welcomeMessageSetting?.value || 'Envie uma mensagem para iniciar a conversa.',
+      inputPlaceholder: inputPlaceholderSetting?.value || 'Digite uma mensagem...',
       version: versionInfo.version,
       buildDate: versionInfo.buildDate,
       environment: process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'development',
@@ -66,6 +70,8 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
     res.json({
       botName: process.env.BOT_NAME || 'Assistente de IA',
       systemPalette: 'green',
+      welcomeMessage: 'Envie uma mensagem para iniciar a conversa.',
+      inputPlaceholder: 'Digite uma mensagem...',
       version: versionInfo.version,
       buildDate: versionInfo.buildDate,
       environment: process.env.APP_ENVIRONMENT || process.env.NODE_ENV || 'development',
