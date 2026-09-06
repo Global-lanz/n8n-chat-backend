@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     build-essential \
     ca-certificates \
+    openssl \
     && rm -rf /var/lib/apt/lists/* \
     && if [ -f package-lock.json ]; then npm ci --production=false; else npm install; fi
 
@@ -27,6 +28,12 @@ RUN npm run build
 FROM node:20-bookworm-slim
 
 WORKDIR /app
+
+# Prisma's query/schema engines are dynamically linked against libssl at runtime —
+# the slim base image doesn't ship it, so install it explicitly.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Build argument for version
 ARG APP_VERSION=unknown
