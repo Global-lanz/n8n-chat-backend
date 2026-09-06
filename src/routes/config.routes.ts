@@ -43,10 +43,11 @@ try {
 // Get app configuration
 router.get('/', async (_req: Request, res: Response): Promise<void> => {
   try {
-    const [botNameSetting, paletteSetting, logoSetting, welcomeMessageSetting, inputPlaceholderSetting] = await Promise.all([
+    const [botNameSetting, paletteSetting, logoSetting, logoDarkSetting, welcomeMessageSetting, inputPlaceholderSetting] = await Promise.all([
       prisma.settings.findUnique({ where: { key: 'default_bot_name' } }),
       prisma.settings.findUnique({ where: { key: 'system_color_palette' } }),
       prisma.settings.findUnique({ where: { key: 'app_logo' } }),
+      prisma.settings.findUnique({ where: { key: 'app_logo_dark' } }),
       prisma.settings.findUnique({ where: { key: 'chat_welcome_message' } }),
       prisma.settings.findUnique({ where: { key: 'chat_input_placeholder' } }),
     ]);
@@ -57,6 +58,7 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
       botName: botNameSetting?.value || process.env.BOT_NAME || 'NorteIA',
       systemPalette: paletteSetting?.value || 'green',
       appLogo: logoSetting?.value || null,
+      appLogoDark: logoDarkSetting?.value || null,
       welcomeMessage: welcomeMessageSetting?.value || 'Envie uma mensagem para iniciar a conversa.',
       inputPlaceholder: inputPlaceholderSetting?.value || 'Digite uma mensagem...',
       version: versionInfo.version,
