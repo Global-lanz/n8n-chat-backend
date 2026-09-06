@@ -73,7 +73,9 @@ export class BootstrapService {
       { key: 'default_bot_name', value: 'NorteIA', description: 'Nome padrão do bot' },
       { key: 'default_license_duration', value: '365', description: 'Duração padrão da licença em dias' },
       { key: 'system_color_palette', value: 'green', description: 'Paleta de cores do sistema' },
-      { key: 'system_prompt', value: 'Você é um assistente virtual útil.', description: 'Prompt padrão enviado para a ferramenta de IA' }
+      { key: 'system_prompt', value: 'Você é um assistente virtual útil.', description: 'Prompt padrão enviado para a ferramenta de IA' },
+      { key: 'chat_welcome_message', value: 'Envie uma mensagem para iniciar a conversa.', description: 'Mensagem inicial exibida antes da primeira mensagem do chat' },
+      { key: 'chat_input_placeholder', value: 'Digite uma mensagem...', description: 'Texto de placeholder da caixa de mensagem' }
     ];
 
     for (const setting of defaultSettings) {
