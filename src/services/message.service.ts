@@ -101,7 +101,15 @@ export class MessageService {
       const systemPromptSetting = await prisma.settings.findUnique({
         where: { key: 'system_prompt' }
       });
-      const systemPrompt = systemPromptSetting?.value || 'Você é um assistente virtual útil.';
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { displayName: true, pronouns: true },
+      });
+      // Placeholders are resolved here, not in N8N, so every workflow gets the
+      // same behavior; prompts without them pass through unchanged.
+      const systemPrompt = (systemPromptSetting?.value || 'Você é um assistente virtual útil.')
+        .replaceAll('{{NOME}}', user?.displayName || username)
+        .replaceAll('{{PRONOMES}}', user?.pronouns || 'não informados');
 
       const response = await axios.post(
         config.n8nWebhookUrl,
