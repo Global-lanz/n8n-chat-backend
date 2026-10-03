@@ -2,6 +2,8 @@ export class EmbedSessionDto {
   externalId!: string;
   email!: string;
   name!: string;
+  // Optional — only present when the person declared them in the host app.
+  pronomes?: string;
 
   validate(): string[] {
     const errors: string[] = [];
@@ -16,6 +18,10 @@ export class EmbedSessionDto {
 
     if (!this.name || this.name.trim().length === 0) {
       errors.push('name é obrigatório');
+    }
+
+    if (this.pronomes != null && typeof this.pronomes !== 'string') {
+      errors.push('pronomes deve ser texto');
     }
 
     return errors;

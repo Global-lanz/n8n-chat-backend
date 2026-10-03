@@ -25,6 +25,11 @@ model User {
   // this chat via POST /api/embed/session). Independent of authId — separate
   // concern, own JIT-provisioning path, not tied to AUTH_MODE.
   embedExternalId    String?   @unique @map("embed_external_id")
+  // Profile data supplied by the embedding app on every POST /api/embed/session
+  // (refreshed each time, so profile edits there propagate here). Substituted
+  // into the system prompt's {{NOME}} / {{PRONOMES}} placeholders.
+  displayName        String?   @map("display_name")
+  pronouns           String?
   createdAt          DateTime  @default(now()) @map("created_at")
 
   messages           Message[]

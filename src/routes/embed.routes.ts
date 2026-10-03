@@ -26,6 +26,7 @@ router.post('/session', embedAuthMiddleware, async (req: Request, res: Response)
       externalId: dto.externalId,
       email: dto.email,
       name: dto.name,
+      pronouns: dto.pronomes,
     });
 
     res.json(result);

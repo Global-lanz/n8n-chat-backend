@@ -8,6 +8,7 @@ export interface EmbedIdentity {
   externalId: string;
   email: string;
   name: string;
+  pronouns?: string;
 }
 
 export interface EmbedSessionResult {
@@ -80,7 +81,16 @@ export class EmbedAuthService {
       throw new Error('Usuário inativo');
     }
 
-    return user;
+    // Refreshed on every session (not just at creation) so profile edits in
+    // the host app reach the system prompt; absent pronouns clear the stored
+    // value, since the person may have removed them from their profile.
+    return prisma.user.update({
+      where: { id: user.id },
+      data: {
+        displayName: identity.name.trim(),
+        pronouns: identity.pronouns?.trim() || null,
+      },
+    });
   }
 
   private async resolveUniqueUsername(base: string): Promise<string> {
